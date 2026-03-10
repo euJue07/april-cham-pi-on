@@ -1,6 +1,6 @@
 # Product Requirements Document: Sipnayan ChamPIon Digit Display App
 
-**Version:** 0.3  
+**Version:** 0.4  
 **Status:** In progress  
 **Last updated:** March 10, 2026  
 
@@ -42,22 +42,23 @@ The **Digit Display App** is a facilitator tool for the **Sipnayan ChamPIon 2026
 
 ### 3.1 Display Layout (Required)
 
-- **Large digit (center):** The digit the contestant should recite *right now*.  
-  - Dominant size (e.g. 40–60% of viewport height).  
-  - High contrast, clear font (e.g. sans-serif, bold).  
-  - Single character: `0`–`9` or the decimal point when at position 0.
+- **Large digit (center):** Used only for **feedback** after the judge presses C or X.  
+  - **At start and between rounds:** The large digit is **empty** (contestant has not said anything yet; nothing is being compared).  
+  - **After C (correct):** The **confirmed** digit is shown in normal color and stays until the next keypress.  
+  - **After X (wrong):** The **expected** digit (the one from the corner) is shown in **red** and stays until the next keypress; that same digit appears in red in the small context below.  
+  - Dominant size when shown (e.g. 40–60% of viewport height). High contrast, clear font. Single character: `0`–`9`.
 
-- **Small digits (below):** Full sequence of π so far (from the start through the current position).
+- **Small digits (below):** Full sequence of π so far (from the start through the last confirmed position).
   - Shown in a grid of **20 characters per row** (each character in its own cell, including the leading `3` and decimal point).
-  - Current digit highlighted; wrong digits (if any) in a distinct “wrong” color.
+  - Wrong digits in a distinct “wrong” color; no “current” digit highlight in the grid (the corner shows the expected digit).
   - Smaller font (e.g. 12–20% of large digit). Same font family; can be lighter weight.
-  - When the grid exceeds **10 rows**, the context area becomes **scrollable** (vertical scroll); the view scrolls so the current digit stays visible as the user advances.
+  - When the grid exceeds **10 rows**, the context area becomes **scrollable** (vertical scroll); the view scrolls so the last confirmed digit stays visible.
 
-- **Initial state:** On load, show large digit `3` and small digits `3.14159…` (full sequence so far in a 20-per-row grid), with the “current” position at the first digit after the decimal (e.g. `1` in `3.14159`).
+- **Initial state:** On load, the large digit is **empty**. Small digits show **3.** only (no digits after the decimal yet). The corner shows the first digit the contestant should say (e.g. **1**).
 
-- **Facilitator-only next-digit guide:** A subtle “Next: &lt;digit&gt;” hint in the lower right (muted colour, small font) so the operator can confirm whether the contestant’s answer matches the upcoming digit before pressing correct/wrong. Not prominent enough to aid the contestant.
+- **Facilitator-only expected-digit guide:** A subtle **“Expected: &lt;digit&gt;”** hint in the lower right (muted colour, small font) so the judge can see which digit the contestant should say and compare their answer before pressing C (correct) or X (wrong). Not prominent enough to aid the contestant.
 
-- **Wrong-answer feedback:** When the operator marks the current digit as wrong (**X**), the large digit turns red and advances immediately (no delay), so fast recitation is not slowed. Wrong digits also appear in the small context grid in a distinct “wrong” colour.
+- **Wrong-answer feedback:** When the operator marks the digit as wrong (**X**), the **expected** digit (from the corner) is shown in **red** in the large digit and remains until the next keypress; that same digit appears in the small context grid in a distinct “wrong” colour.
 
 ### 3.2 Digit Source
 
@@ -81,10 +82,10 @@ All controls are **keyboard-only** so the operator never has to grab the mouse d
 | Key | Action | Notes |
 |-----|--------|--------|
 | **Space** or **Enter** | Next digit (correct) | Advance without marking wrong; primary “next” action. |
-| **X** | Wrong — next digit | Large digit turns red and advances immediately; the expected digit is marked wrong and appears in the small context in a distinct “wrong” colour. |
+| **X** | Wrong | Expected digit is shown in red (large + context) and stays until next keypress; then advance to next. |
 | **C** | Correct — next digit | Same as Space/Enter; advance with no wrong styling. |
 | **Backspace** | Previous digit | For corrections or if contestant repeats. |
-| **Home** | Jump to start | Show `3` and `3.14159…` from the beginning; clears wrong markers. |
+| **Home** | Jump to start | Large digit empty, context “3.”, corner shows first expected digit; clears wrong markers. |
 | **End** | Jump to end of loaded digits | Optional; for testing or long runs. |
 | **F** or **F11** | Toggle fullscreen | Maximize visibility in amphitheatre. |
 | **R** | Reset to start | Same as Home; mnemonic “Reset”. |

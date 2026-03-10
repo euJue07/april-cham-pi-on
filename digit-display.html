@@ -279,16 +279,16 @@
 
   <main class="display" id="main">
     <div class="large-digit-wrap">
-      <span class="large-digit" id="large-digit" aria-live="polite">3</span>
+      <span class="large-digit" id="large-digit" aria-live="polite"></span>
     </div>
     <div class="context-wrap">
-      <div class="context" id="context" role="text" aria-live="polite">3.<span class="current">1</span>415926535…</div>
+      <div class="context" id="context" role="text" aria-live="polite">3.</div>
     </div>
   </main>
 
   <div class="meta-block" aria-hidden="true">
     <div class="meta" id="meta">Digit #1</div>
-    <div class="next-digit-guide" id="next-digit-guide">Next: <span class="next-digit-value" id="next-digit-value"></span></div>
+    <div class="next-digit-guide" id="next-digit-guide">Expected: <span class="next-digit-value" id="next-digit-value"></span></div>
   </div>
 
   <button type="button" id="restart-btn" aria-label="Reset to start">R</button>
@@ -297,9 +297,9 @@
     <div class="help-card">
       <h3>Keyboard shortcuts</h3>
       <table>
-        <tr><td><kbd>Space</kbd> / <kbd>Enter</kbd></td><td>Next digit (correct)</td></tr>
-        <tr><td><kbd>X</kbd></td><td>Wrong — big digit turns red, advance immediately</td></tr>
-        <tr><td><kbd>C</kbd></td><td>Correct — next digit</td></tr>
+        <tr><td><kbd>Space</kbd> / <kbd>Enter</kbd></td><td>Correct — confirmed digit shows (big), next expected in corner</td></tr>
+        <tr><td><kbd>X</kbd></td><td>Wrong — expected digit shows in red (big + below) until next key</td></tr>
+        <tr><td><kbd>C</kbd></td><td>Correct — same as Space/Enter; confirmed digit shows (big)</td></tr>
         <tr><td><kbd>Backspace</kbd></td><td>Previous digit</td></tr>
         <tr><td><kbd>Home</kbd> / <kbd>R</kbd></td><td>Jump to start (or use the R button)</td></tr>
         <tr><td><kbd>End</kbd></td><td>Jump to end</td></tr>
@@ -316,6 +316,8 @@
 
       var index = 0;
       var wrongIndices = {};
+      var showingWrongDigit = null;
+      var showingCorrectDigit = null;
       var fullSeq = '3' + PI;
       var largeEl = document.getElementById('large-digit');
       var contextEl = document.getElementById('context');
@@ -325,18 +327,14 @@
       var helpOverlay = document.getElementById('help-overlay');
       var restartBtn = document.getElementById('restart-btn');
 
-      function getCurrentChar() {
-        return fullSeq[index];
+      function getNextToSay() {
+        return index + 1 < fullSeq.length ? fullSeq[index + 1] : null;
       }
 
       function buildContext() {
-        // Full sequence from start through current position: 3, ., then digits
         var html = '';
-        // First character (3)
-        if (index === 0) html += '<span class="context-cell current">3</span>';
-        else html += '<span class="context-cell">3</span>';
+        html += '<span class="context-cell">3</span>';
         html += '<span class="context-cell">.</span>';
-        // fullSeq[1] through fullSeq[index]
         for (var i = 1; i <= index; i++) {
           var ch = fullSeq[i];
           if (i === index) html += '<span class="context-cell current">' + ch + '</span>';
@@ -352,48 +350,68 @@
       }
 
       function render() {
-        var cur = getCurrentChar();
-        largeEl.textContent = cur;
+        if (showingWrongDigit !== null) {
+          largeEl.textContent = showingWrongDigit;
+          largeEl.classList.add('wrong');
+        } else if (showingCorrectDigit !== null) {
+          largeEl.textContent = showingCorrectDigit;
+          largeEl.classList.remove('wrong');
+        } else {
+          largeEl.textContent = '';
+          largeEl.classList.remove('wrong');
+        }
         contextEl.innerHTML = buildContext();
         metaEl.textContent = 'Digit #' + (index + 1);
         if (nextDigitValueEl) {
-          nextDigitValueEl.textContent = index + 1 < fullSeq.length ? fullSeq[index + 1] : '—';
+          var next = getNextToSay();
+          nextDigitValueEl.textContent = next !== null ? next : '—';
         }
         scrollCurrentIntoView();
       }
 
       function advance() {
+        showingWrongDigit = null;
+        showingCorrectDigit = null;
         if (index >= fullSeq.length - 1) return;
-        largeEl.classList.add('advance');
-        setTimeout(function () { largeEl.classList.remove('advance'); }, 120);
         index++;
+        showingCorrectDigit = fullSeq[index];
         render();
       }
 
       function advanceWrong() {
+        showingWrongDigit = null;
+        showingCorrectDigit = null;
         if (index >= fullSeq.length - 1) return;
-        largeEl.classList.add('wrong');
-        wrongIndices[index] = true;
+        var expected = getNextToSay();
+        if (expected === null) return;
+        wrongIndices[index + 1] = true;
         index++;
+        showingWrongDigit = fullSeq[index];
         render();
-        largeEl.classList.remove('wrong');
       }
 
       function previous() {
         if (index <= 0) return;
+        delete wrongIndices[index];
         index--;
+        showingWrongDigit = null;
+        showingCorrectDigit = null;
         render();
       }
 
       function goStart() {
-        largeEl.classList.remove('wrong');
         index = 0;
         wrongIndices = {};
+        showingWrongDigit = null;
+        showingCorrectDigit = null;
+        largeEl.classList.remove('wrong');
         render();
       }
 
       function goEnd() {
         index = fullSeq.length - 1;
+        showingWrongDigit = null;
+        showingCorrectDigit = null;
         render();
       }
 
