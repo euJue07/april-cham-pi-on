@@ -1,0 +1,40 @@
+---
+description: Update project documentation whenever we make progress (features, fixes, decisions)
+alwaysApply: true
+---
+
+# Keep Documentation in Sync With Progress
+
+After completing any meaningful progress (new feature, bugfix, decision, or milestone), update the relevant docs so they stay the single source of truth.
+
+## When to Update
+
+- You finished a task, feature, or fix that affects the app or project.
+- You changed scope, deliverables, or requirements.
+- You added a new doc or artifact that should be discoverable.
+
+## What to Update
+
+1. **PRD** (`docs/PRD-digit-display-app.md`)
+   - Bump **Last updated** (date).
+   - If scope or status changed: update **Version** or **Status** (e.g. Draft → In progress → Done).
+   - Add or edit sections only when requirements or decisions actually change.
+
+2. **Docs index** (`docs/README.md`)
+   - Add a link to any new doc under the right section (Contest, Product, or a new section).
+   - Keep descriptions one line and accurate.
+
+3. **Optional: Changelog or progress**
+   - If the project gains a `CHANGELOG.md` or `docs/progress.md`, append a short entry (date, what changed).
+
+## How to Do It
+
+- Make doc updates in the same turn as the code/content changes, or immediately after.
+- Prefer small, factual edits (dates, status, links) over rewriting. Do not invent progress that did not happen.
+- If unsure whether something is “meaningful progress,” err on the side of updating: a quick date or status change is low cost.
+
+## Docs Layout (Reference)
+
+- `docs/README.md` — Index of all docs.
+- `docs/sipnayan-champion-2026.md` — Contest rules (update only when rules change).
+- `docs/PRD-digit-display-app.md` — Product requirements; keep version, status, and “Last updated” current.
