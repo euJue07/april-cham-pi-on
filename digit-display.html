@@ -343,6 +343,18 @@
       display: none;
     }
     @media (max-width: 1024px) {
+      :root {
+        /* one-row button bar (tablet) */
+        --mobile-keyboard-bar-height: 5.5rem;
+        --mobile-keyboard-meta-row-height: 2.25rem;
+        --mobile-keyboard-height: calc(var(--mobile-keyboard-meta-row-height) + var(--mobile-keyboard-bar-height) + env(safe-area-inset-bottom));
+      }
+      /* phone: buttons wrap to two rows, so taller bar is needed */
+      @media (max-width: 480px) {
+        :root {
+          --mobile-keyboard-bar-height: 8.5rem;
+        }
+      }
       .mobile-controls {
         display: flex;
         flex-wrap: wrap;
@@ -393,6 +405,17 @@
       }
       #restart-btn {
         display: none;
+      }
+      .meta-block {
+        bottom: calc(var(--mobile-keyboard-bar-height) + env(safe-area-inset-bottom));
+        padding: 0.4rem 1rem 0.5rem;
+        background: var(--surface);
+        border-top: 1px solid rgba(201, 162, 39, 0.15);
+        min-height: var(--mobile-keyboard-meta-row-height);
+        box-sizing: border-box;
+      }
+      body {
+        padding-bottom: var(--mobile-keyboard-height);
       }
     }
   </style>
