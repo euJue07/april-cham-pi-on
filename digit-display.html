@@ -158,6 +158,34 @@
       font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
     }
 
+    /* Restart button */
+    #restart-btn {
+      position: fixed;
+      bottom: 1rem;
+      left: 1.25rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      padding: 0;
+      border: 1px solid rgba(201, 162, 39, 0.35);
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--accent);
+      font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s var(--ease-out), color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+    }
+    #restart-btn:hover {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+    }
+    #restart-btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--focus-ring);
+    }
+
     /* Help overlay */
     #help-overlay {
       position: fixed;
@@ -218,6 +246,7 @@
       <h2>Sipnayan ChamPIon — Digit Display</h2>
       <p>Click anywhere or press any key to enable keyboard controls.</p>
       <p><kbd>Space</kbd> / <kbd>Enter</kbd> next · <kbd>X</kbd> wrong · <kbd>C</kbd> correct · <kbd>Backspace</kbd> previous · <kbd>?</kbd> help</p>
+      <p>Restart: <kbd>R</kbd> or the <strong>R</strong> button</p>
     </div>
   </div>
 
@@ -232,6 +261,8 @@
 
   <div class="meta" aria-hidden="true">Digit #1</div>
 
+  <button type="button" id="restart-btn" aria-label="Reset to start">R</button>
+
   <div id="help-overlay" aria-hidden="true" aria-label="Keyboard shortcuts">
     <div class="help-card">
       <h3>Keyboard shortcuts</h3>
@@ -240,7 +271,7 @@
         <tr><td><kbd>X</kbd></td><td>Wrong — next digit, show expected in wrong color</td></tr>
         <tr><td><kbd>C</kbd></td><td>Correct — next digit</td></tr>
         <tr><td><kbd>Backspace</kbd></td><td>Previous digit</td></tr>
-        <tr><td><kbd>Home</kbd> / <kbd>R</kbd></td><td>Jump to start</td></tr>
+        <tr><td><kbd>Home</kbd> / <kbd>R</kbd></td><td>Jump to start (or use the R button)</td></tr>
         <tr><td><kbd>End</kbd></td><td>Jump to end</td></tr>
         <tr><td><kbd>F</kbd> / <kbd>F11</kbd></td><td>Fullscreen</td></tr>
         <tr><td><kbd>?</kbd> / <kbd>H</kbd></td><td>Show / hide this help</td></tr>
@@ -262,6 +293,7 @@
       var metaEl = document.querySelector('.meta');
       var focusOverlay = document.getElementById('focus-overlay');
       var helpOverlay = document.getElementById('help-overlay');
+      var restartBtn = document.getElementById('restart-btn');
 
       function getCurrentChar() {
         return fullSeq[index];
@@ -395,6 +427,7 @@
       }
 
       focusOverlay.addEventListener('click', hideFocusOverlay);
+      if (restartBtn) restartBtn.addEventListener('click', goStart);
       document.addEventListener('keydown', handleKey);
 
       render();
