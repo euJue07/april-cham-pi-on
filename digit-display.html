@@ -261,15 +261,15 @@
       }
 
       function buildContext() {
-        var start = Math.max(0, index - 1);
-        var end = Math.min(fullSeq.length, index + contextLen);
-        var html = '';
+        // Show only digits so far (past + current); no future digits visible
+        var start = Math.max(0, index + 1 - contextLen);
+        var end = index + 1;
+        var html = start > 0 ? '…' : '';
         for (var i = start; i < end; i++) {
           if (i === 1) html += '.'; // decimal point after first digit
           if (i === index) html += '<span class="current">' + fullSeq[i] + '</span>';
           else html += fullSeq[i];
         }
-        if (end < fullSeq.length) html += '…';
         return html;
       }
 
