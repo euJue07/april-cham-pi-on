@@ -9,3 +9,4 @@ Documentation for the Sipnayan ChamPIon 2026 app.
 ## Product
 
 - **[PRD: Digit Display App](PRD-digit-display-app.md)** — Product requirements for the single-file HTML app used in the Final Round: display (big digit + small context), keyboard controls, UX improvements, and offline delivery.
+- **MVP:** Single-file `digit-display.html` in project root — open in browser; keyboard-controlled π digit display for recitation (offline, no install).

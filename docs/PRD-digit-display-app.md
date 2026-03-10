@@ -1,7 +1,7 @@
 # Product Requirements Document: Sipnayan ChamPIon Digit Display App
 
-**Version:** 0.1  
-**Status:** Draft  
+**Version:** 0.2  
+**Status:** In progress  
 **Last updated:** March 10, 2026  
 
 ---

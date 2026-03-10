@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sipnayan ChamPIon — Digit Display</title>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --bg-gradient: radial-gradient(ellipse 120% 80% at 50% 20%, rgba(201, 162, 39, 0.06) 0%, transparent 55%), #0d0f14;
+      --surface: #161a22;
+      --digit: #f2efe8;
+      --digit-dim: #6b7280;
+      --accent: #c9a227;
+      --accent-soft: rgba(201, 162, 39, 0.45);
+      --help-bg: rgba(13, 15, 20, 0.96);
+      --focus-ring: #c9a227;
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      background: var(--bg-gradient);
+      color: var(--digit);
+      font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      transition: background 0.3s var(--ease-out);
+    }
+
+    /* Click-to-focus overlay */
+    #focus-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--help-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      opacity: 1;
+      transition: opacity 0.4s var(--ease-out);
+      cursor: pointer;
+    }
+    #focus-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #focus-overlay .focus-card {
+      text-align: center;
+      padding: 2.5rem 3rem;
+      border: 1px solid rgba(201, 162, 39, 0.35);
+      border-radius: 12px;
+      max-width: 420px;
+    }
+    #focus-overlay .focus-card h2 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: 0.02em;
+      color: var(--digit);
+      margin-bottom: 0.75rem;
+    }
+    #focus-overlay .focus-card p {
+      font-size: 0.9rem;
+      color: var(--digit-dim);
+      line-height: 1.5;
+    }
+    #focus-overlay .focus-card kbd {
+      display: inline-block;
+      padding: 0.2em 0.5em;
+      background: var(--surface);
+      border-radius: 4px;
+      font-size: 0.85em;
+      margin-top: 1rem;
+      color: var(--accent);
+    }
+
+    /* Main display */
+    .display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(1.5rem, 4vw, 3rem);
+      width: 100%;
+      max-width:  min(95vw, 900px);
+    }
+
+    .large-digit-wrap {
+      position: relative;
+      min-height: 0.45vh;
+    }
+
+    .large-digit {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 700;
+      font-size: clamp(4rem, 18vw, 22vh);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--digit);
+      text-shadow: 0 0 80px rgba(242, 239, 232, 0.08);
+      transition: transform 0.12s var(--ease-out), opacity 0.12s var(--ease-out);
+    }
+    .large-digit.advance {
+      transform: scale(1.02);
+      opacity: 0.92;
+    }
+
+    .context-wrap {
+      width: 100%;
+      overflow: hidden;
+      padding: 0.5rem 0;
+    }
+
+    .context {
+      font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+      font-weight: 500;
+      font-size: clamp(0.75rem, 2.2vw, 1.25rem);
+      letter-spacing: 0.08em;
+      color: var(--digit-dim);
+      text-align: center;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+    .context .current {
+      color: var(--accent);
+      font-weight: 500;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: var(--accent-soft);
+    }
+
+    .meta {
+      position: fixed;
+      bottom: 1rem;
+      right: 1.25rem;
+      font-size: 0.7rem;
+      color: var(--digit-dim);
+      opacity: 0.6;
+      font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+    }
+
+    /* Help overlay */
+    #help-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--help-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s var(--ease-out), visibility 0.25s var(--ease-out);
+    }
+    #help-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    #help-overlay .help-card {
+      padding: 2rem 2.5rem;
+      border: 1px solid rgba(201, 162, 39, 0.25);
+      border-radius: 12px;
+      max-width: 380px;
+    }
+    #help-overlay .help-card h3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--digit);
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.02em;
+    }
+    #help-overlay .help-card table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      color: var(--digit-dim);
+    }
+    #help-overlay .help-card td {
+      padding: 0.4rem 0.75rem 0.4rem 0;
+      vertical-align: top;
+    }
+    #help-overlay .help-card td:first-child {
+      color: var(--accent);
+      font-weight: 500;
+    }
+    #help-overlay .help-card kbd {
+      font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+      padding: 0.15em 0.4em;
+      background: var(--surface);
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div id="focus-overlay" aria-hidden="false">
+    <div class="focus-card">
+      <h2>Sipnayan ChamPIon — Digit Display</h2>
+      <p>Click anywhere or press any key to enable keyboard controls.</p>
+      <p><kbd>Space</kbd> next · <kbd>Backspace</kbd> previous · <kbd>?</kbd> help</p>
+    </div>
+  </div>
+
+  <main class="display" id="main">
+    <div class="large-digit-wrap">
+      <span class="large-digit" id="large-digit" aria-live="polite">3</span>
+    </div>
+    <div class="context-wrap">
+      <p class="context" id="context" aria-live="polite">3.<span class="current">1</span>415926535…</p>
+    </div>
+  </main>
+
+  <div class="meta" aria-hidden="true">Digit #1</div>
+
+  <div id="help-overlay" aria-hidden="true" aria-label="Keyboard shortcuts">
+    <div class="help-card">
+      <h3>Keyboard shortcuts</h3>
+      <table>
+        <tr><td><kbd>Space</kbd> / <kbd>Enter</kbd></td><td>Next digit</td></tr>
+        <tr><td><kbd>Backspace</kbd> / <kbd>←</kbd></td><td>Previous digit</td></tr>
+        <tr><td><kbd>Home</kbd> / <kbd>R</kbd></td><td>Jump to start</td></tr>
+        <tr><td><kbd>End</kbd></td><td>Jump to end</td></tr>
+        <tr><td><kbd>F</kbd> / <kbd>F11</kbd></td><td>Fullscreen</td></tr>
+        <tr><td><kbd>?</kbd> / <kbd>H</kbd></td><td>Show / hide this help</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // π digits (3.14159…) — 500 digits after decimal
+      var PI = '1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989';
+
+      var index = 0;
+      var contextLen = 14;
+      var fullSeq = '3' + PI;
+      var largeEl = document.getElementById('large-digit');
+      var contextEl = document.getElementById('context');
+      var metaEl = document.querySelector('.meta');
+      var focusOverlay = document.getElementById('focus-overlay');
+      var helpOverlay = document.getElementById('help-overlay');
+
+      function getCurrentChar() {
+        return fullSeq[index];
+      }
+
+      function buildContext() {
+        var start = Math.max(0, index - 1);
+        var end = Math.min(fullSeq.length, index + contextLen);
+        var html = '';
+        for (var i = start; i < end; i++) {
+          if (i === 1) html += '.'; // decimal point after first digit
+          if (i === index) html += '<span class="current">' + fullSeq[i] + '</span>';
+          else html += fullSeq[i];
+        }
+        if (end < fullSeq.length) html += '…';
+        return html;
+      }
+
+      function render() {
+        var cur = getCurrentChar();
+        largeEl.textContent = cur;
+        contextEl.innerHTML = buildContext();
+        metaEl.textContent = 'Digit #' + (index + 1);
+      }
+
+      function advance() {
+        if (index >= fullSeq.length - 1) return;
+        largeEl.classList.add('advance');
+        setTimeout(function () { largeEl.classList.remove('advance'); }, 120);
+        index++;
+        render();
+      }
+
+      function previous() {
+        if (index <= 0) return;
+        index--;
+        render();
+      }
+
+      function goStart() {
+        index = 0;
+        render();
+      }
+
+      function goEnd() {
+        index = fullSeq.length - 1;
+        render();
+      }
+
+      function toggleHelp() {
+        helpOverlay.classList.toggle('visible');
+        helpOverlay.setAttribute('aria-hidden', helpOverlay.classList.contains('visible') ? 'false' : 'true');
+      }
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {});
+        else if (document.exitFullscreen) document.exitFullscreen();
+      }
+
+      function hideFocusOverlay() {
+        focusOverlay.classList.add('hidden');
+        focusOverlay.setAttribute('aria-hidden', 'true');
+      }
+
+      function handleKey(e) {
+        if (focusOverlay.classList.contains('hidden') === false) hideFocusOverlay();
+
+        if (helpOverlay.classList.contains('visible')) {
+          if (e.key === 'Escape' || e.key === '?' || e.key === 'h' || e.key === 'H') {
+            e.preventDefault();
+            toggleHelp();
+            return;
+          }
+          toggleHelp();
+        }
+
+        switch (e.key) {
+          case ' ': case 'Enter':
+            e.preventDefault();
+            advance();
+            break;
+          case 'Backspace': case 'ArrowLeft':
+            e.preventDefault();
+            previous();
+            break;
+          case 'Home': case 'r': case 'R':
+            e.preventDefault();
+            goStart();
+            break;
+          case 'End':
+            e.preventDefault();
+            goEnd();
+            break;
+          case 'f': case 'F':
+            e.preventDefault();
+            if (!e.altKey && !e.ctrlKey && !e.metaKey) toggleFullscreen();
+            break;
+          case 'F11':
+            e.preventDefault();
+            toggleFullscreen();
+            break;
+          case '?': case 'h': case 'H':
+            e.preventDefault();
+            toggleHelp();
+            break;
+          case 'Escape':
+            e.preventDefault();
+            if (helpOverlay.classList.contains('visible')) toggleHelp();
+            else if (document.fullscreenElement) document.exitFullscreen();
+            break;
+        }
+      }
+
+      focusOverlay.addEventListener('click', hideFocusOverlay);
+      document.addEventListener('keydown', handleKey);
+
+      render();
+    })();
+  </script>
+</body>
+</html>
