@@ -113,6 +113,7 @@ All controls are **keyboard-only** so the operator never has to grab the mouse d
 
 - **Help overlay:** “?” or “H” shows a short cheat sheet (e.g. “Space = next, Backspace = previous, F = fullscreen”); disappears on next key or after 3–5 seconds.  
 - **Click-to-focus:** Big “Click anywhere to enable keyboard” on first load so keypresses are not lost.  
+- **Pre-game countdown:** After clicking to enable, a 3-second countdown (3 → 2 → 1) is shown before the game starts; the 10 s bar and keyboard controls become active when the countdown ends. Restart (R / Home) also shows the countdown before resetting to the start.
 - **Visual feedback (optional):** Brief, subtle highlight or animation on “next” (e.g. 100 ms) so the operator sees that the key was registered, without distracting the contestant.
 
 ### 5.3 Alignment with Contest Rules

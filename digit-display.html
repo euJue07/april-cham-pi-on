@@ -93,6 +93,34 @@
       color: var(--accent);
     }
 
+    /* Countdown overlay (3, 2, 1 before game start) */
+    #countdown-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--help-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.3s var(--ease-out), visibility 0.3s var(--ease-out);
+    }
+    #countdown-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    #countdown-overlay .countdown-digit {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 700;
+      font-size: clamp(6rem, 24vw, 28vh);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+      text-shadow: 0 0 80px rgba(201, 162, 39, 0.2);
+    }
+
     /* Main display */
     .display {
       display: flex;
@@ -321,6 +349,10 @@
     </div>
   </div>
 
+  <div id="countdown-overlay" aria-hidden="true" aria-live="polite">
+    <span id="countdown-digit" class="countdown-digit"></span>
+  </div>
+
   <main class="display" id="main">
     <div class="large-digit-wrap">
       <span class="large-digit" id="large-digit" aria-live="polite"></span>
@@ -389,6 +421,43 @@
       var lastEKeyTime = 0;
       var E_DOUBLE_PRESS_MS = 500;
       var gameEndIndex = null;
+      var gameStarted = false;
+      var countdownActive = false;
+      var countdownTimeoutIds = [];
+
+      var countdownOverlay = document.getElementById('countdown-overlay');
+      var countdownDigitEl = document.getElementById('countdown-digit');
+
+      function clearCountdownTimeouts() {
+        var i;
+        for (i = 0; i < countdownTimeoutIds.length; i++) clearTimeout(countdownTimeoutIds[i]);
+        countdownTimeoutIds = [];
+      }
+
+      function runCountdown(onComplete) {
+        clearCountdownTimeouts();
+        countdownActive = true;
+        if (countdownOverlay) {
+          countdownOverlay.classList.add('visible');
+          countdownOverlay.setAttribute('aria-hidden', 'false');
+        }
+        function show(n) {
+          if (countdownDigitEl) countdownDigitEl.textContent = n;
+        }
+        function end() {
+          countdownActive = false;
+          if (countdownOverlay) {
+            countdownOverlay.classList.remove('visible');
+            countdownOverlay.setAttribute('aria-hidden', 'true');
+          }
+          if (countdownDigitEl) countdownDigitEl.textContent = '';
+          if (typeof onComplete === 'function') onComplete();
+        }
+        show(3);
+        countdownTimeoutIds.push(setTimeout(function () { show(2); }, 1000));
+        countdownTimeoutIds.push(setTimeout(function () { show(1); }, 2000));
+        countdownTimeoutIds.push(setTimeout(function () { clearCountdownTimeouts(); end(); }, 3000));
+      }
 
       function getNextToSay() {
         return index + 1 < fullSeq.length ? fullSeq[index + 1] : null;
@@ -525,6 +594,8 @@
         showingWrongDigit = null;
         showingCorrectDigit = null;
         largeEl.classList.remove('wrong');
+        var barWrap = document.querySelector('.bar-timer-wrap');
+        if (barWrap) barWrap.style.display = '';
         render();
         startBarTimer();
       }
@@ -534,8 +605,10 @@
         index = fullSeq.length - 1;
         showingWrongDigit = null;
         showingCorrectDigit = null;
+        stopBarTimer();
+        var barWrap = document.querySelector('.bar-timer-wrap');
+        if (barWrap) barWrap.style.display = 'none';
         render();
-        startBarTimer();
       }
 
       function toggleHelp() {
@@ -551,10 +624,28 @@
       function hideFocusOverlay() {
         focusOverlay.classList.add('hidden');
         focusOverlay.setAttribute('aria-hidden', 'true');
+        if (!gameStarted) {
+          runCountdown(function () {
+            gameStarted = true;
+            startBarTimer();
+          });
+        }
       }
 
       function handleKey(e) {
         if (focusOverlay.classList.contains('hidden') === false) hideFocusOverlay();
+
+        if (countdownActive) {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            if (helpOverlay.classList.contains('visible')) toggleHelp();
+            else if (document.fullscreenElement) document.exitFullscreen();
+          } else if (e.key === '?' || e.key === 'h' || e.key === 'H') {
+            e.preventDefault();
+            toggleHelp();
+          }
+          return;
+        }
 
         if (helpOverlay.classList.contains('visible')) {
           if (e.key === 'Escape' || e.key === '?' || e.key === 'h' || e.key === 'H') {
@@ -584,7 +675,7 @@
             break;
           case 'Home': case 'r': case 'R':
             e.preventDefault();
-            goStart();
+            runCountdown(goStart);
             break;
           case 'e': case 'E':
             e.preventDefault();
@@ -618,11 +709,10 @@
       }
 
       focusOverlay.addEventListener('click', hideFocusOverlay);
-      if (restartBtn) restartBtn.addEventListener('click', goStart);
+      if (restartBtn) restartBtn.addEventListener('click', function () { runCountdown(goStart); });
       document.addEventListener('keydown', handleKey);
 
       render();
-      startBarTimer();
     })();
   </script>
 </body>
