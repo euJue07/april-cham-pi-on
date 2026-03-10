@@ -47,13 +47,13 @@ The **Digit Display App** is a facilitator tool for the **Sipnayan ChamPIon 2026
   - High contrast, clear font (e.g. sans-serif, bold).  
   - Single character: `0`–`9` or the decimal point when at position 0.
 
-- **Small digits (below):** Running context of π so far.  
-  - Example: `3.1415926535…` with the current position aligned or highlighted.  
-  - Smaller font (e.g. 12–20% of large digit).  
-  - Same font family; can be lighter weight.  
-  - Wraps or scrolls if needed when the sequence gets long.
+- **Small digits (below):** Full sequence of π so far (from the start through the current position).
+  - Shown in a grid of **20 characters per row** (each character in its own cell, including the leading `3` and decimal point).
+  - Current digit highlighted; wrong digits (if any) in a distinct “wrong” color.
+  - Smaller font (e.g. 12–20% of large digit). Same font family; can be lighter weight.
+  - When the grid exceeds **10 rows**, the context area becomes **scrollable** (vertical scroll); the view scrolls so the current digit stays visible as the user advances.
 
-- **Initial state:** On load, show large digit `3` and small digits `3.14159…` (or configurable length), with the “current” position at the first digit after the decimal (e.g. `1` in `3.14159`).
+- **Initial state:** On load, show large digit `3` and small digits `3.14159…` (full sequence so far in a 20-per-row grid), with the “current” position at the first digit after the decimal (e.g. `1` in `3.14159`).
 
 ### 3.2 Digit Source
 

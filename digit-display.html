@@ -122,19 +122,26 @@
 
     .context-wrap {
       width: 100%;
-      overflow: hidden;
+      --context-row-height: 1.6em;
+      max-height: calc(10 * var(--context-row-height));
+      overflow-y: auto;
       padding: 0.5rem 0;
     }
 
     .context {
+      display: grid;
+      grid-template-columns: repeat(20, minmax(0, 1fr));
       font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
       font-weight: 500;
       font-size: clamp(0.75rem, 2.2vw, 1.25rem);
       letter-spacing: 0.08em;
       color: var(--digit-dim);
       text-align: center;
-      word-break: break-all;
-      line-height: 1.6;
+      line-height: var(--context-row-height);
+    }
+    .context .context-cell {
+      min-width: 0;
+      min-height: var(--context-row-height);
     }
     .context .current {
       color: var(--accent);
@@ -255,7 +262,7 @@
       <span class="large-digit" id="large-digit" aria-live="polite">3</span>
     </div>
     <div class="context-wrap">
-      <p class="context" id="context" aria-live="polite">3.<span class="current">1</span>415926535…</p>
+      <div class="context" id="context" role="text" aria-live="polite">3.<span class="current">1</span>415926535…</div>
     </div>
   </main>
 
@@ -286,7 +293,6 @@
 
       var index = 0;
       var wrongIndices = {};
-      var contextLen = 14;
       var fullSeq = '3' + PI;
       var largeEl = document.getElementById('large-digit');
       var contextEl = document.getElementById('context');
@@ -300,17 +306,25 @@
       }
 
       function buildContext() {
-        // Show only digits so far (past + current); no future digits visible
-        var start = Math.max(0, index + 1 - contextLen);
-        var end = index + 1;
-        var html = start > 0 ? '…' : '';
-        for (var i = start; i < end; i++) {
-          if (i === 1) html += '.'; // decimal point after first digit
-          if (i === index) html += '<span class="current">' + fullSeq[i] + '</span>';
-          else if (wrongIndices[i]) html += '<span class="wrong">' + fullSeq[i] + '</span>';
-          else html += fullSeq[i];
+        // Full sequence from start through current position: 3, ., then digits
+        var html = '';
+        // First character (3)
+        if (index === 0) html += '<span class="context-cell current">3</span>';
+        else html += '<span class="context-cell">3</span>';
+        html += '<span class="context-cell">.</span>';
+        // fullSeq[1] through fullSeq[index]
+        for (var i = 1; i <= index; i++) {
+          var ch = fullSeq[i];
+          if (i === index) html += '<span class="context-cell current">' + ch + '</span>';
+          else if (wrongIndices[i]) html += '<span class="context-cell wrong">' + ch + '</span>';
+          else html += '<span class="context-cell">' + ch + '</span>';
         }
         return html;
+      }
+
+      function scrollCurrentIntoView() {
+        var current = contextEl.querySelector('.current');
+        if (current) current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
 
       function render() {
@@ -318,6 +332,7 @@
         largeEl.textContent = cur;
         contextEl.innerHTML = buildContext();
         metaEl.textContent = 'Digit #' + (index + 1);
+        scrollCurrentIntoView();
       }
 
       function advance() {
