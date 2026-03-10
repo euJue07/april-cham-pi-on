@@ -1,6 +1,6 @@
 # Product Requirements Document: Sipnayan ChamPIon Digit Display App
 
-**Version:** 0.2  
+**Version:** 0.3  
 **Status:** In progress  
 **Last updated:** March 10, 2026  
 
@@ -55,6 +55,10 @@ The **Digit Display App** is a facilitator tool for the **Sipnayan ChamPIon 2026
 
 - **Initial state:** On load, show large digit `3` and small digits `3.14159…` (full sequence so far in a 20-per-row grid), with the “current” position at the first digit after the decimal (e.g. `1` in `3.14159`).
 
+- **Facilitator-only next-digit guide:** A subtle “Next: &lt;digit&gt;” hint in the lower right (muted colour, small font) so the operator can confirm whether the contestant’s answer matches the upcoming digit before pressing correct/wrong. Not prominent enough to aid the contestant.
+
+- **Wrong-answer feedback:** When the operator marks the current digit as wrong (**X**), the large digit turns red and advances immediately (no delay), so fast recitation is not slowed. Wrong digits also appear in the small context grid in a distinct “wrong” colour.
+
 ### 3.2 Digit Source
 
 - Digits of π are embedded in the single HTML file (e.g. as a string or in a `<script>`).  
@@ -77,7 +81,7 @@ All controls are **keyboard-only** so the operator never has to grab the mouse d
 | Key | Action | Notes |
 |-----|--------|--------|
 | **Space** or **Enter** | Next digit (correct) | Advance without marking wrong; primary “next” action. |
-| **X** | Wrong — next digit | Advance and mark the expected digit as wrong; it appears in the small context line in a distinct “wrong” color. |
+| **X** | Wrong — next digit | Large digit turns red and advances immediately; the expected digit is marked wrong and appears in the small context in a distinct “wrong” colour. |
 | **C** | Correct — next digit | Same as Space/Enter; advance with no wrong styling. |
 | **Backspace** | Previous digit | For corrections or if contestant repeats. |
 | **Home** | Jump to start | Show `3` and `3.14159…` from the beginning; clears wrong markers. |

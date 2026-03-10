@@ -15,6 +15,8 @@
       --accent-soft: rgba(201, 162, 39, 0.45);
       --help-bg: rgba(13, 15, 20, 0.96);
       --focus-ring: #c9a227;
+      --wrong-digit: #e07c7c;
+      --digit-guide: rgba(107, 114, 128, 0.4);
       --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -119,6 +121,10 @@
       transform: scale(1.02);
       opacity: 0.92;
     }
+    .large-digit.wrong {
+      color: var(--wrong-digit);
+      transition: color 0.15s var(--ease-out);
+    }
 
     .context-wrap {
       width: 100%;
@@ -151,18 +157,32 @@
       text-decoration-color: var(--accent-soft);
     }
     .context .wrong {
-      color: #e07c7c;
+      color: var(--wrong-digit);
       font-weight: 500;
     }
 
-    .meta {
+    .meta-block {
       position: fixed;
       bottom: 1rem;
       right: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.2rem;
+      font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+    }
+    .meta {
       font-size: 0.7rem;
       color: var(--digit-dim);
       opacity: 0.6;
-      font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+    }
+    .next-digit-guide {
+      font-size: 0.65rem;
+      color: var(--digit-guide);
+      opacity: 0.9;
+    }
+    .next-digit-guide .next-digit-value {
+      font-weight: 500;
     }
 
     /* Restart button */
@@ -266,7 +286,10 @@
     </div>
   </main>
 
-  <div class="meta" aria-hidden="true">Digit #1</div>
+  <div class="meta-block" aria-hidden="true">
+    <div class="meta" id="meta">Digit #1</div>
+    <div class="next-digit-guide" id="next-digit-guide">Next: <span class="next-digit-value" id="next-digit-value"></span></div>
+  </div>
 
   <button type="button" id="restart-btn" aria-label="Reset to start">R</button>
 
@@ -275,7 +298,7 @@
       <h3>Keyboard shortcuts</h3>
       <table>
         <tr><td><kbd>Space</kbd> / <kbd>Enter</kbd></td><td>Next digit (correct)</td></tr>
-        <tr><td><kbd>X</kbd></td><td>Wrong — next digit, show expected in wrong color</td></tr>
+        <tr><td><kbd>X</kbd></td><td>Wrong — big digit turns red, advance immediately</td></tr>
         <tr><td><kbd>C</kbd></td><td>Correct — next digit</td></tr>
         <tr><td><kbd>Backspace</kbd></td><td>Previous digit</td></tr>
         <tr><td><kbd>Home</kbd> / <kbd>R</kbd></td><td>Jump to start (or use the R button)</td></tr>
@@ -296,7 +319,8 @@
       var fullSeq = '3' + PI;
       var largeEl = document.getElementById('large-digit');
       var contextEl = document.getElementById('context');
-      var metaEl = document.querySelector('.meta');
+      var metaEl = document.getElementById('meta');
+      var nextDigitValueEl = document.getElementById('next-digit-value');
       var focusOverlay = document.getElementById('focus-overlay');
       var helpOverlay = document.getElementById('help-overlay');
       var restartBtn = document.getElementById('restart-btn');
@@ -332,6 +356,9 @@
         largeEl.textContent = cur;
         contextEl.innerHTML = buildContext();
         metaEl.textContent = 'Digit #' + (index + 1);
+        if (nextDigitValueEl) {
+          nextDigitValueEl.textContent = index + 1 < fullSeq.length ? fullSeq[index + 1] : '—';
+        }
         scrollCurrentIntoView();
       }
 
@@ -345,11 +372,11 @@
 
       function advanceWrong() {
         if (index >= fullSeq.length - 1) return;
+        largeEl.classList.add('wrong');
         wrongIndices[index] = true;
-        largeEl.classList.add('advance');
-        setTimeout(function () { largeEl.classList.remove('advance'); }, 120);
         index++;
         render();
+        largeEl.classList.remove('wrong');
       }
 
       function previous() {
@@ -359,6 +386,7 @@
       }
 
       function goStart() {
+        largeEl.classList.remove('wrong');
         index = 0;
         wrongIndices = {};
         render();
