@@ -76,9 +76,11 @@ All controls are **keyboard-only** so the operator never has to grab the mouse d
 
 | Key | Action | Notes |
 |-----|--------|--------|
-| **Space** or **Enter** | Next digit | Primary “advance” action; most used. |
-| **Backspace** or **←** (Left arrow) | Previous digit | For corrections or if contestant repeats. |
-| **Home** | Jump to start | Show `3` and `3.14159…` from the beginning. |
+| **Space** or **Enter** | Next digit (correct) | Advance without marking wrong; primary “next” action. |
+| **X** | Wrong — next digit | Advance and mark the expected digit as wrong; it appears in the small context line in a distinct “wrong” color. |
+| **C** | Correct — next digit | Same as Space/Enter; advance with no wrong styling. |
+| **Backspace** | Previous digit | For corrections or if contestant repeats. |
+| **Home** | Jump to start | Show `3` and `3.14159…` from the beginning; clears wrong markers. |
 | **End** | Jump to end of loaded digits | Optional; for testing or long runs. |
 | **F** or **F11** | Toggle fullscreen | Maximize visibility in amphitheatre. |
 | **R** | Reset to start | Same as Home; mnemonic “Reset”. |
