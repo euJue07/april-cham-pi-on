@@ -337,6 +337,64 @@
       border-radius: 3px;
       font-size: 0.9em;
     }
+
+    /* Mobile/tablet-only control bar — visible at max-width 1024px */
+    .mobile-controls {
+      display: none;
+    }
+    @media (max-width: 1024px) {
+      .mobile-controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 0.75rem 1rem;
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+        background: var(--surface);
+        border-top: 1px solid rgba(201, 162, 39, 0.2);
+        z-index: 15;
+      }
+      .mobile-controls .mobile-btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid rgba(201, 162, 39, 0.35);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--digit);
+        font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background 0.2s var(--ease-out), color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+      }
+      .mobile-controls .mobile-btn:hover {
+        background: var(--accent);
+        color: var(--bg);
+        border-color: var(--accent);
+      }
+      .mobile-controls .mobile-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--focus-ring);
+      }
+      .mobile-controls .mobile-btn.btn-accent {
+        background: rgba(201, 162, 39, 0.2);
+        color: var(--accent);
+      }
+      .mobile-controls .mobile-btn.btn-wrong:hover {
+        background: var(--wrong-digit);
+        color: var(--bg);
+        border-color: var(--wrong-digit);
+      }
+      #restart-btn {
+        display: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -375,6 +433,16 @@
   </div>
 
   <button type="button" id="restart-btn" aria-label="Reset to start">R</button>
+
+  <div class="mobile-controls" id="mobile-controls" role="toolbar" aria-label="Digit display controls">
+    <button type="button" class="mobile-btn btn-accent" id="mobile-next-btn" aria-label="Next digit (correct)">Next</button>
+    <button type="button" class="mobile-btn btn-wrong" id="mobile-wrong-btn" aria-label="Mark wrong">Wrong</button>
+    <button type="button" class="mobile-btn" id="mobile-prev-btn" aria-label="Previous digit">Prev</button>
+    <button type="button" class="mobile-btn" id="mobile-restart-btn" aria-label="Restart">R</button>
+    <button type="button" class="mobile-btn" id="mobile-help-btn" aria-label="Help">?</button>
+    <button type="button" class="mobile-btn" id="mobile-fullscreen-btn" aria-label="Fullscreen">Full</button>
+    <button type="button" class="mobile-btn" id="mobile-end-btn" aria-label="Jump to end">End</button>
+  </div>
 
   <div id="help-overlay" aria-hidden="true" aria-label="Keyboard shortcuts">
     <div class="help-card">
@@ -711,6 +779,22 @@
       focusOverlay.addEventListener('click', hideFocusOverlay);
       if (restartBtn) restartBtn.addEventListener('click', function () { runCountdown(goStart); });
       document.addEventListener('keydown', handleKey);
+
+      var mobileNextBtn = document.getElementById('mobile-next-btn');
+      var mobileWrongBtn = document.getElementById('mobile-wrong-btn');
+      var mobilePrevBtn = document.getElementById('mobile-prev-btn');
+      var mobileRestartBtn = document.getElementById('mobile-restart-btn');
+      var mobileHelpBtn = document.getElementById('mobile-help-btn');
+      var mobileFullscreenBtn = document.getElementById('mobile-fullscreen-btn');
+      var mobileEndBtn = document.getElementById('mobile-end-btn');
+
+      if (mobileNextBtn) mobileNextBtn.addEventListener('click', function () { if (focusOverlay.classList.contains('hidden')) advance(); });
+      if (mobileWrongBtn) mobileWrongBtn.addEventListener('click', function () { if (focusOverlay.classList.contains('hidden')) advanceWrong(); });
+      if (mobilePrevBtn) mobilePrevBtn.addEventListener('click', function () { if (focusOverlay.classList.contains('hidden')) previous(); });
+      if (mobileRestartBtn) mobileRestartBtn.addEventListener('click', function () { runCountdown(goStart); });
+      if (mobileHelpBtn) mobileHelpBtn.addEventListener('click', toggleHelp);
+      if (mobileFullscreenBtn) mobileFullscreenBtn.addEventListener('click', toggleFullscreen);
+      if (mobileEndBtn) mobileEndBtn.addEventListener('click', function () { if (focusOverlay.classList.contains('hidden')) goEnd(); });
 
       render();
     })();
