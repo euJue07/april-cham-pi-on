@@ -86,7 +86,7 @@ All controls are **keyboard-only** so the operator never has to grab the mouse d
 | **C** | Correct — next digit | Same as Space/Enter; advance with no wrong styling. |
 | **Backspace** | Previous digit | For corrections or if contestant repeats. |
 | **Home** | Jump to start | Large digit empty, context “3.”, corner shows first expected digit; clears wrong markers. |
-| **End** | Jump to end of loaded digits | Optional; for testing or long runs. |
+| **Double-tap E** | Jump to end | Only way to end the game / jump to last digit; avoids accidental end from single keypress. |
 | **F** or **F11** | Toggle fullscreen | Maximize visibility in amphitheatre. |
 | **R** | Reset to start | Same as Home; mnemonic “Reset”. |
 | **?** or **H** | Show/hide help overlay | Short list of controls; hide after a few seconds or on next key. |
@@ -117,11 +117,13 @@ All controls are **keyboard-only** so the operator never has to grab the mouse d
 
 ### 5.3 Alignment with Contest Rules
 
-- **10-second rule:** Optional **pause timer** (e.g. 10 s countdown) that appears when the operator hasn’t advanced for 5+ seconds; warning at 8 s, “Time’s up” at 10 s. Can be toggled (e.g. “T” for timer on/off) so it’s available but not mandatory.  
+- **10-second bar (judge guide):** A **per-digit** 10 s bar appears below the large digit and depletes over 10 seconds, changing color (e.g. accent to yellow to red) as time runs down. It is a **guide for the judge only** and does **not** end the game or advance the digit when it reaches zero; the judge still presses C/X or next as usual. The bar restarts whenever the displayed digit changes (advance, wrong, previous, jump to start/end).  
 - **No external aid:** App does not show answers or hints; it only displays the official sequence.  
 - **Neutral branding:** Optional small “Sipnayan ChamPIon 2026” or logo in a corner; not distracting from the digits.
+- **Only double-tap E** ends the game (jump to last digit); the **End** key is not bound.
+- **End-game summary:** When the game is over (position at last digit), an accuracy summary is shown with correct and wrong counts and percentages; the small context grid below remains visible as history.
 
-### 5.4 Practice & Rehearsal
+### 5.4 Practice & Rehearsal & Rehearsal
 
 - **Practice mode (optional):** Same layout and controls, with optional “hide large digit” so a contestant can practice reciting and then reveal to check.  
 - **Configurable start index:** Optional URL hash or simple form (e.g. `?start=100`) to start from digit 100 for practice from a specific position.  

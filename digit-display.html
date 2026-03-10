@@ -18,6 +18,7 @@
       --wrong-digit: #e07c7c;
       --digit-guide: rgba(107, 114, 128, 0.4);
       --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --timer-warn: #d4a84b;
     }
 
     * {
@@ -126,6 +127,26 @@
       transition: color 0.15s var(--ease-out);
     }
 
+    /* End-game accuracy summary */
+    .accuracy-summary {
+      display: none;
+      width: 100%;
+      text-align: center;
+      font-size: clamp(0.85rem, 2vw, 1rem);
+      color: var(--digit-dim);
+    }
+    .accuracy-summary.visible {
+      display: block;
+    }
+    .accuracy-summary .summary-correct {
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .accuracy-summary .summary-wrong {
+      color: var(--wrong-digit);
+      font-weight: 500;
+    }
+
     .context-wrap {
       width: 100%;
       --context-row-height: 1.6em;
@@ -183,6 +204,29 @@
     }
     .next-digit-guide .next-digit-value {
       font-weight: 500;
+    }
+
+    /* 10s bar timer (judge guide only) */
+    .bar-timer-wrap {
+      width: 100%;
+      height: 6px;
+      background: var(--surface);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-timer-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.1s linear, background-color 0.2s var(--ease-out);
+    }
+    .bar-timer-fill.timer-ok {
+      background: var(--accent);
+    }
+    .bar-timer-fill.timer-warn {
+      background: var(--timer-warn);
+    }
+    .bar-timer-fill.timer-low {
+      background: var(--wrong-digit);
     }
 
     /* Restart button */
@@ -273,13 +317,20 @@
       <h2>Sipnayan ChamPIon — Digit Display</h2>
       <p>Click anywhere or press any key to enable keyboard controls.</p>
       <p><kbd>Space</kbd> / <kbd>Enter</kbd> next · <kbd>X</kbd> wrong · <kbd>C</kbd> correct · <kbd>Backspace</kbd> previous · <kbd>?</kbd> help</p>
-      <p>Restart: <kbd>R</kbd> or the <strong>R</strong> button</p>
+      <p>Restart: <kbd>R</kbd> or the <strong>R</strong> button · Double-tap <kbd>E</kbd> to jump to end</p>
     </div>
   </div>
 
   <main class="display" id="main">
     <div class="large-digit-wrap">
       <span class="large-digit" id="large-digit" aria-live="polite"></span>
+    </div>
+    <div class="accuracy-summary" id="accuracy-summary" aria-live="polite" aria-hidden="true">
+      <span class="summary-correct" id="summary-correct"></span>
+      <span class="summary-wrong" id="summary-wrong"></span>
+    </div>
+    <div class="bar-timer-wrap" aria-hidden="true">
+      <div class="bar-timer-fill timer-ok" id="bar-timer-fill" style="width: 100%;"></div>
     </div>
     <div class="context-wrap">
       <div class="context" id="context" role="text" aria-live="polite">3.</div>
@@ -302,7 +353,7 @@
         <tr><td><kbd>C</kbd></td><td>Correct — same as Space/Enter; confirmed digit shows (big)</td></tr>
         <tr><td><kbd>Backspace</kbd></td><td>Previous digit</td></tr>
         <tr><td><kbd>Home</kbd> / <kbd>R</kbd></td><td>Jump to start (or use the R button)</td></tr>
-        <tr><td><kbd>End</kbd></td><td>Jump to end</td></tr>
+        <tr><td>Double-tap <kbd>E</kbd></td><td>Jump to end (only way to end game)</td></tr>
         <tr><td><kbd>F</kbd> / <kbd>F11</kbd></td><td>Fullscreen</td></tr>
         <tr><td><kbd>?</kbd> / <kbd>H</kbd></td><td>Show / hide this help</td></tr>
       </table>
@@ -326,18 +377,71 @@
       var focusOverlay = document.getElementById('focus-overlay');
       var helpOverlay = document.getElementById('help-overlay');
       var restartBtn = document.getElementById('restart-btn');
+      var barTimerFillEl = document.getElementById('bar-timer-fill');
+      var accuracySummaryEl = document.getElementById('accuracy-summary');
+      var summaryCorrectEl = document.getElementById('summary-correct');
+      var summaryWrongEl = document.getElementById('summary-wrong');
+
+      var barTimerInterval = null;
+      var barTimerStartTime = null;
+      var BAR_DURATION_MS = 10000;
+      var BAR_TICK_MS = 50;
+      var lastEKeyTime = 0;
+      var E_DOUBLE_PRESS_MS = 500;
+      var gameEndIndex = null;
 
       function getNextToSay() {
         return index + 1 < fullSeq.length ? fullSeq[index + 1] : null;
       }
 
+      function getAccuracySummary() {
+        var playedUpTo = (gameEndIndex !== null) ? gameEndIndex : index;
+        var totalDigits = playedUpTo + 1;
+        var wrongCount = 0;
+        for (var k in wrongIndices) { if (wrongIndices[k] && parseInt(k, 10) <= playedUpTo) wrongCount++; }
+        var correctCount = totalDigits - wrongCount;
+        var accuracyPct = totalDigits ? Math.round((correctCount / totalDigits) * 100) : 0;
+        var wrongPct = totalDigits ? Math.round((wrongCount / totalDigits) * 100) : 0;
+        return { totalDigits: totalDigits, correctCount: correctCount, wrongCount: wrongCount, accuracyPct: accuracyPct, wrongPct: wrongPct };
+      }
+
+      function stopBarTimer() {
+        if (barTimerInterval) {
+          clearInterval(barTimerInterval);
+          barTimerInterval = null;
+        }
+        barTimerStartTime = null;
+      }
+
+      function startBarTimer() {
+        stopBarTimer();
+        barTimerStartTime = Date.now();
+        barTimerInterval = setInterval(function () {
+          var elapsed = Date.now() - barTimerStartTime;
+          var remaining = Math.max(0, BAR_DURATION_MS - elapsed);
+          var pct = (remaining / BAR_DURATION_MS) * 100;
+          if (barTimerFillEl) {
+            barTimerFillEl.style.width = pct + '%';
+            barTimerFillEl.classList.remove('timer-ok', 'timer-warn', 'timer-low');
+            if (remaining > 3000) barTimerFillEl.classList.add('timer-ok');
+            else if (remaining > 1000) barTimerFillEl.classList.add('timer-warn');
+            else barTimerFillEl.classList.add('timer-low');
+          }
+          if (remaining <= 0) {
+            clearInterval(barTimerInterval);
+            barTimerInterval = null;
+          }
+        }, BAR_TICK_MS);
+      }
+
       function buildContext() {
+        var displayUpTo = (gameEndIndex !== null) ? gameEndIndex : index;
         var html = '';
         html += '<span class="context-cell">3</span>';
         html += '<span class="context-cell">.</span>';
-        for (var i = 1; i <= index; i++) {
+        for (var i = 1; i <= displayUpTo; i++) {
           var ch = fullSeq[i];
-          if (i === index) html += '<span class="context-cell current">' + ch + '</span>';
+          if (i === displayUpTo) html += '<span class="context-cell current">' + ch + '</span>';
           else if (wrongIndices[i]) html += '<span class="context-cell wrong">' + ch + '</span>';
           else html += '<span class="context-cell">' + ch + '</span>';
         }
@@ -366,6 +470,18 @@
           var next = getNextToSay();
           nextDigitValueEl.textContent = next !== null ? next : '—';
         }
+        if (index === fullSeq.length - 1 && accuracySummaryEl && summaryCorrectEl && summaryWrongEl) {
+          var s = getAccuracySummary();
+          summaryCorrectEl.textContent = 'Correct: ' + s.correctCount + ' (' + s.accuracyPct + '%)';
+          summaryWrongEl.textContent = ' · Wrong: ' + s.wrongCount + ' (' + s.wrongPct + '%)';
+          accuracySummaryEl.classList.add('visible');
+          accuracySummaryEl.setAttribute('aria-hidden', 'false');
+        } else if (accuracySummaryEl) {
+          accuracySummaryEl.classList.remove('visible');
+          accuracySummaryEl.setAttribute('aria-hidden', 'true');
+          if (summaryCorrectEl) summaryCorrectEl.textContent = '';
+          if (summaryWrongEl) summaryWrongEl.textContent = '';
+        }
         scrollCurrentIntoView();
       }
 
@@ -376,6 +492,7 @@
         index++;
         showingCorrectDigit = fullSeq[index];
         render();
+        startBarTimer();
       }
 
       function advanceWrong() {
@@ -388,6 +505,7 @@
         index++;
         showingWrongDigit = fullSeq[index];
         render();
+        startBarTimer();
       }
 
       function previous() {
@@ -397,22 +515,27 @@
         showingWrongDigit = null;
         showingCorrectDigit = null;
         render();
+        startBarTimer();
       }
 
       function goStart() {
         index = 0;
+        gameEndIndex = null;
         wrongIndices = {};
         showingWrongDigit = null;
         showingCorrectDigit = null;
         largeEl.classList.remove('wrong');
         render();
+        startBarTimer();
       }
 
       function goEnd() {
+        gameEndIndex = index;
         index = fullSeq.length - 1;
         showingWrongDigit = null;
         showingCorrectDigit = null;
         render();
+        startBarTimer();
       }
 
       function toggleHelp() {
@@ -463,9 +586,16 @@
             e.preventDefault();
             goStart();
             break;
-          case 'End':
+          case 'e': case 'E':
             e.preventDefault();
-            goEnd();
+            if (e.repeat) break;
+            var now = Date.now();
+            if (lastEKeyTime && (now - lastEKeyTime) < E_DOUBLE_PRESS_MS) {
+              goEnd();
+              lastEKeyTime = 0;
+            } else {
+              lastEKeyTime = now;
+            }
             break;
           case 'f': case 'F':
             e.preventDefault();
@@ -492,6 +622,7 @@
       document.addEventListener('keydown', handleKey);
 
       render();
+      startBarTimer();
     })();
   </script>
 </body>
